@@ -1,0 +1,155 @@
+---
+title: "Homework 3"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Classification
+
+```{r, message = FALSE}
+library(tidyverse)
+library(tidymodels)
+library(ggplot2)
+library(corrplot)
+library(corrr)
+library(ggthemes)
+library(ISLR) # For the Smarket data set
+library(ISLR2) # For the Bikeshare data set
+library(discrim)
+library(poissonreg)
+library(klaR) # for naive bayes
+tidymodels_prefer()
+```
+
+```{r}
+titanic <- read.csv("homework-3/data/titanic.csv")
+view(titanic)
+```
+
+#### Question 1:
+```{r}
+set.seed(0714)
+
+titanic_split <- initial_split(titanic, prop=0.70,
+                               strata = survived)
+titanic_train <- training(titanic_split)
+titanic_test <- testing(titanic_split)
+```
+
+For the training data set, there are potential issues with the variable cabin, because there seems to be observations that have missing data. 
+Likewise can be seen for the variable age as well. The other variable with two missing values in the observations is embarked. 
+
+It is a good idea to use stratified sampling, because it ensures that the population is being represented as accurately as possible, so if 
+there are missing values, the stratified sampling should be able to represent the ratio of missing values as the ones seen in the population.
+
+
+#### Question 2:
+```{r}
+titanic %>%
+  ggplot(aes(x = survived)) +
+  geom_bar()
+```
+
+Based on the graph, it seems like there are more people that did not survive than those that did. Because the outcome is only yes or no, the distribution follows a Bernoulli distribution.
+
+
+
+#### Question 3:
+
+```{r}
+#Correlation
+cor_titanic <- titanic %>%
+  select(is.numeric) %>%
+  correlate()
+rplot(cor_titanic)
+```
+
+There are a couple of variables that are correlated with each other.
+The following are negatively correlated with each other:
+pclass and fare
+pclass and age
+sib_sp and age
+parch and age
+The following are positively correlated with each other:
+sib_sp and parch
+fare and parch
+
+
+#### Question 4:
+```{r}
+titanic_recipe <- recipe(survived ~ pclass + sex + age + sib_sp
+                         + parch + fare, data = titanic_train) %>%
+  step_impute_linear(age) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_interact(~ starts_with("sex"):fare) %>%
+  step_interact(~ age:fare)
+
+```
+
+
+
+#### Question 5:
+```{r}
+#Logistic Regression Model
+log_reg <- logistic_reg() %>%
+  set_engine("glm") %>%
+  set_mode("classification")
+
+log_wkflow <- workflow() %>%
+  add_model(log_reg) %>%
+  add_recipe(titanic_recipe)
+
+log_fit <- fit(log_wkflow, titanic_train)
+
+log_fit %>%
+  tidy()
+```
+
+
+#### Question 6:
+```{r}
+#Linear Discriminant Analysis Model
+lda_mod <- discrim_linear() %>%
+  set_mode("classification") %>%
+  set_engine("MASS")
+
+lda_wkflow <- workflow() %>%
+  add_model(lda_mod) %>%
+  add_recipe(titanic_recipe)
+
+lda_fit <- fit(lda_wkflow, titanic_train)
+```
+
+
+
+#### Question 7:
+```{r}
+#Quadratic Discriminant Analysis Model
+qda_mod <- discrim_quad() %>%
+  set_mode("classification") %>%
+  set_engine("MASS")
+
+qda_wkflow <- workflow() %>%
+  add_model(qda_mod) %>%
+  add_recipe(titanic_recipe)
+
+qda_fit <- fit(qda_wkflow, titanic_train)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
