@@ -25,7 +25,7 @@ tidymodels_prefer()
 ```
 
 ```{r}
-titanic <- read.csv("homework-3/data/titanic.csv")
+titanic <- read.csv("homework-3/data/titanic.csv", stringsAsFactors = TRUE)
 view(titanic)
 ```
 
@@ -103,9 +103,6 @@ log_wkflow <- workflow() %>%
   add_recipe(titanic_recipe)
 
 log_fit <- fit(log_wkflow, titanic_train)
-
-log_fit %>%
-  tidy()
 ```
 
 
@@ -140,12 +137,66 @@ qda_fit <- fit(qda_wkflow, titanic_train)
 ```
 
 
+#### Question 8:
+```{r}
+#Naive-Bayes Model
+nb_mod <- naive_Bayes() %>%
+  set_mode("classification") %>%
+  set_engine("klaR") %>%
+  set_args(usekernel = FALSE)
+
+nb_wkflow <- workflow() %>%
+  add_model(nb_mod) %>%
+  add_recipe(titanic_recipe)
+
+nb_fit <- fit(nb_wkflow, titanic_train)
+```
 
 
+#### Question 9:
+```{r}
+#Logistic Regression Performance
+log_regt_perf <- predict(log_fit, new_data = titanic_train, type = "prob")
 
+log_regt_perf <- bind_cols(log_regt_perf, titanic_train)
 
+log_reg_acc <- augment(log_fit, new_data = titanic_train) %>%
+  accuracy(truth = survived, estimate = .pred_class)
 
+log_reg_acc
 
+#LDA Performance
+ldat_perf <- predict(lda_fit, new_data = titanic_train, type = "prob")
+
+ldat_perf <- bind_cols(ldat_perf, titanic_train)
+
+lda_acc <- augment(lda_fit, new_data = titanic_train) %>%
+  accuracy(truth = survived, estimate = .pred_class)
+
+lda_acc
+
+#QDA Performance
+qdat_perf <- predict(qda_fit, new_data = titanic_train, type = "prob")
+
+qdat_perf <- bind_cols(qdat_perf, titanic_train)
+
+qda_acc <- augment(qda_fit, new_data = titanic_train) %>%
+  accuracy(truth = survived, estimate = .pred_class)
+
+qda_acc
+
+#NB Performance
+nbt_perf <- predict(nb_fit, new_data = titanic_train, type = "prob")
+
+nbt_perf <- bind_cols(nbt_perf, titanic_train)
+
+nb_acc <- augment(nb_fit, new_data = titanic_train)%>%
+  accuracy(truth = survived, estimate = .pred_class)
+
+nb_acc
+```
+
+The model that acheived the highest accuracy was the logistic regression model. 
 
 
 
