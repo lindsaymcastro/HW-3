@@ -16,8 +16,6 @@ library(ggplot2)
 library(corrplot)
 library(corrr)
 library(ggthemes)
-library(ISLR) # For the Smarket data set
-library(ISLR2) # For the Bikeshare data set
 library(discrim)
 library(poissonreg)
 library(klaR) # for naive bayes
@@ -26,7 +24,6 @@ tidymodels_prefer()
 
 ```{r}
 titanic <- read.csv("homework-3/data/titanic.csv", stringsAsFactors = TRUE)
-view(titanic)
 ```
 
 #### Question 1:
@@ -59,23 +56,31 @@ Based on the graph, it seems like there are more people that did not survive tha
 
 #### Question 3:
 
-```{r}
+```{r, message=FALSE}
 #Correlation
 cor_titanic <- titanic %>%
-  select(is.numeric) %>%
+  select(where(is.numeric)) %>%
   correlate()
 rplot(cor_titanic)
 ```
 
 There are a couple of variables that are correlated with each other.
 The following are negatively correlated with each other:
-pclass and fare
-pclass and age
-sib_sp and age
-parch and age
+
+* pclass and fare
+
+* pclass and age
+
+* sib_sp and age
+
+* parch and age
+
 The following are positively correlated with each other:
-sib_sp and parch
-fare and parch
+
+* sib_sp and parch
+
+* fare and parch
+
 
 
 #### Question 4:
@@ -154,7 +159,7 @@ nb_fit <- fit(nb_wkflow, titanic_train)
 
 
 #### Question 9:
-```{r}
+```{r, warning=FALSE}
 #Logistic Regression Performance
 log_regt_perf <- predict(log_fit, new_data = titanic_train, type = "prob")
 
@@ -163,7 +168,6 @@ log_regt_perf <- bind_cols(log_regt_perf, titanic_train)
 log_reg_acc <- augment(log_fit, new_data = titanic_train) %>%
   accuracy(truth = survived, estimate = .pred_class)
 
-log_reg_acc
 
 #LDA Performance
 ldat_perf <- predict(lda_fit, new_data = titanic_train, type = "prob")
@@ -173,7 +177,6 @@ ldat_perf <- bind_cols(ldat_perf, titanic_train)
 lda_acc <- augment(lda_fit, new_data = titanic_train) %>%
   accuracy(truth = survived, estimate = .pred_class)
 
-lda_acc
 
 #QDA Performance
 qdat_perf <- predict(qda_fit, new_data = titanic_train, type = "prob")
@@ -183,7 +186,6 @@ qdat_perf <- bind_cols(qdat_perf, titanic_train)
 qda_acc <- augment(qda_fit, new_data = titanic_train) %>%
   accuracy(truth = survived, estimate = .pred_class)
 
-qda_acc
 
 #NB Performance
 nbt_perf <- predict(nb_fit, new_data = titanic_train, type = "prob")
@@ -193,12 +195,47 @@ nbt_perf <- bind_cols(nbt_perf, titanic_train)
 nb_acc <- augment(nb_fit, new_data = titanic_train)%>%
   accuracy(truth = survived, estimate = .pred_class)
 
-nb_acc
+#Comparing Model Perfomance
+accuracies <- c(log_reg_acc$.estimate, lda_acc$.estimate, 
+                nb_acc$.estimate, qda_acc$.estimate)
+models <- c("Logistic Regression", "LDA", "Naive Bayes", "QDA")
+results <- tibble(accuracies = accuracies, models = models)
+results %>%
+  arrange(-accuracies)
+
 ```
 
-The model that acheived the highest accuracy was the logistic regression model. 
+The model that achieved the highest accuracy was the logistic regression model with 79.5% 
 
 
+#### Question 10:
+```{r, message=FALSE}
+#Fit into testing data
+predict(log_fit, new_data = titanic_test, type = "prob")
+
+#Testing Accuracy
+multi_metric <- metric_set(accuracy, sensitivity, specificity)
+augment(log_fit, new_data = titanic_test) %>%
+  multi_metric(truth = survived, estimate = .pred_class)
+
+#Confusion matrix on the testing data
+augment(log_fit, new_data = titanic_test) %>%
+  conf_mat(truth = survived, estimate = .pred_class)
+
+#ROC curve
+augment(log_fit, new_data = titanic_test) %>%
+  roc_curve(survived, .pred_No) %>%
+  autoplot()
+
+#Find the AUC
+library(pROC)
+library(yardstick)
+augment(log_fit, new_data = titanic_test) %>%
+  roc_auc(survived, .pred_No) 
+
+```
+
+The model performed rather well. The testing accuracy score was 83.6%, while the training accuracy score was 79.5%, so it seemed to fit the testing data better than the training data. These values might differ because there are less observations in the testing dataset than the training dataset. 
 
 
 
