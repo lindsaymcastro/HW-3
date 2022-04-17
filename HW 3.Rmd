@@ -1,13 +1,18 @@
 ---
 title: "Homework 3"
-output: html_document
+output:
+    html_document:
+      toc: true
+      toc_float: true
+      code_folding: show
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      warning = FALSE)
 ```
 
-### Classification
+## Classification
 
 ```{r, message = FALSE}
 library(tidyverse)
@@ -26,7 +31,7 @@ tidymodels_prefer()
 titanic <- read.csv("homework-3/data/titanic.csv", stringsAsFactors = TRUE)
 ```
 
-#### Question 1:
+### Question 1:
 ```{r}
 set.seed(0714)
 
@@ -43,7 +48,7 @@ It is a good idea to use stratified sampling, because it ensures that the popula
 there are missing values, the stratified sampling should be able to represent the ratio of missing values as the ones seen in the population.
 
 
-#### Question 2:
+### Question 2:
 ```{r}
 titanic %>%
   ggplot(aes(x = survived)) +
@@ -54,7 +59,7 @@ Based on the graph, it seems like there are more people that did not survive tha
 
 
 
-#### Question 3:
+### Question 3:
 
 ```{r, message=FALSE}
 #Correlation
@@ -83,7 +88,7 @@ The following are positively correlated with each other:
 
 
 
-#### Question 4:
+### Question 4:
 ```{r}
 titanic_recipe <- recipe(survived ~ pclass + sex + age + sib_sp
                          + parch + fare, data = titanic_train) %>%
@@ -96,7 +101,7 @@ titanic_recipe <- recipe(survived ~ pclass + sex + age + sib_sp
 
 
 
-#### Question 5:
+### Question 5:
 ```{r}
 #Logistic Regression Model
 log_reg <- logistic_reg() %>%
@@ -111,7 +116,7 @@ log_fit <- fit(log_wkflow, titanic_train)
 ```
 
 
-#### Question 6:
+### Question 6:
 ```{r}
 #Linear Discriminant Analysis Model
 lda_mod <- discrim_linear() %>%
@@ -127,7 +132,7 @@ lda_fit <- fit(lda_wkflow, titanic_train)
 
 
 
-#### Question 7:
+### Question 7:
 ```{r}
 #Quadratic Discriminant Analysis Model
 qda_mod <- discrim_quad() %>%
@@ -142,7 +147,7 @@ qda_fit <- fit(qda_wkflow, titanic_train)
 ```
 
 
-#### Question 8:
+### Question 8:
 ```{r}
 #Naive-Bayes Model
 nb_mod <- naive_Bayes() %>%
@@ -158,7 +163,7 @@ nb_fit <- fit(nb_wkflow, titanic_train)
 ```
 
 
-#### Question 9:
+### Question 9:
 ```{r, warning=FALSE}
 #Logistic Regression Performance
 log_regt_perf <- predict(log_fit, new_data = titanic_train, type = "prob")
@@ -208,7 +213,7 @@ results %>%
 The model that achieved the highest accuracy was the logistic regression model with 79.5% 
 
 
-#### Question 10:
+### Question 10:
 ```{r, message=FALSE}
 #Fit into testing data
 predict(log_fit, new_data = titanic_test, type = "prob")
